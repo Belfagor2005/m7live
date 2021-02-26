@@ -1,0 +1,29 @@
+<!-- ***** SCREEN 1280x720 ***** 03/02/2018 -->
+<screen name="m7liveHD3" position="0,0" size="1280,720" title="m7live" flags="wfNoBorder" backgroundColor="transparent">
+<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/m7live/skin/hd/background.png" alphatest="blend" zPosition="-1" />
+<widget name="menu" position="89,165" size="545,346" zPosition="2" foregroundColor="#ffffff" backgroundColor="#000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand" />
+<widget name="info" position="326,69" size="636,35" font="Regular;28" zPosition="10" foregroundColor="#7bd7f7" backgroundColor="#40000000" transparent="1" halign="left" valign="center" />
+<!-- <widget name="version" position="84,68" size="241,38" font="Regular;28" zPosition="10" foregroundColor="#7bd7f7" backgroundColor="#101010" transparent="1" halign="center" valign="center" /> -->
+
+<eLabel position="300,585" zPosition="1" size="200,30" backgroundColor="#f23d21" /> 
+<eLabel position="302,587" zPosition="1" size="196,26" backgroundColor="#000000" /> 
+<eLabel position="500,585" zPosition="1" size="200,30" backgroundColor="#389416" />
+<eLabel position="502,587" zPosition="1" size="196,26" backgroundColor="#000000" />
+<eLabel position="700,585" zPosition="1" size="200,30" backgroundColor="#bab329" />
+<eLabel position="702,587" zPosition="1" size="196,26" backgroundColor="#000000" />
+<eLabel position="900,585" zPosition="1" size="200,30" backgroundColor="#0064c7" />
+<eLabel position="902,587" zPosition="1" size="196,26" backgroundColor="#000000" />
+<widget name="key_blue" position="900,585" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
+<widget name="key_red" position="300,585" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /> 
+<widget name="key_green" position="500,585" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /> 
+<widget name="key_yellow" position="700,585" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
+<widget source="session.VideoPicture" render="Pig" position="656,168" size="541,340" backgroundColor="transparent" zPosition="5" />
+<!-- Clock -->
+<widget source="global.CurrentTime" render="Label" position="949,64" size="250,50" font="Regular;20" halign="right" valign="center" foregroundColor="#7bd7f7" backgroundColor="#101010" transparent="1" zPosition="1">
+	<convert type="ClockToText">Format %A %d %B %H:%M:%S</convert>
+</widget>  
+
+</screen>
+
+
+
