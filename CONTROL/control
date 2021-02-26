@@ -1,0 +1,10 @@
+Package: enigma2-plugin-extensions-m7live
+Version: 1.2
+Section: extra
+Priority: optional
+Architecture: all
+Maintainer: pcd@linuxsat-support;ekekaz@gmail.com
+Description: Enigma2 Plugin m7live
+Source: None
+Homepage: linuxsat-support
+OE: 2.0
