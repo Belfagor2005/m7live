@@ -4,4 +4,7 @@ echo "*  Enjoy our plugin                    *"
 echo "****************************************"
 
 echo " Remember Restarting Enigma2 to load..."
+#init 4
+#killall -9 enigma2 > /dev/null 2>&1
+#init 3
 exit 0

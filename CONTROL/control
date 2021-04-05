@@ -7,4 +7,4 @@ Maintainer: pcd@linuxsat-support;ekekaz@gmail.com
 Description: Enigma2 Plugin m7live
 Source: None
 Homepage: linuxsat-support
-OE: 2.0
+OE: m7live

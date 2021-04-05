@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: IPTVupdater\n"
+"Project-Id-Version: m7live\n"
 "POT-Creation-Date: 2019-01-01 18:44+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
@@ -47,63 +47,3 @@ msgstr ""
 #: plugin.py:387
 msgid "Direct"
 msgstr ""
-
-#~ msgctxt "Otkazi"
-#~ msgid "Cancel"
-#~ msgstr "Otkazi"
-
-#~ msgctxt "Izaberi"
-#~ msgid "Select"
-#~ msgstr "Izaberi"
-
-#~ msgctxt "O"
-#~ msgid "About"
-#~ msgstr "O"
-
-#~ msgctxt "IPTVnadogradjivac"
-#~ msgid "IPTVupdater"
-#~ msgstr "IPTVnadogradjivac"
-
-#~ msgctxt "Uredu"
-#~ msgid "OK"
-#~ msgstr "Uredu"
-
-#~ msgctxt "Status linka"
-#~ msgid "Link Status"
-#~ msgstr "Status linka"
-
-#~ msgctxt "Status"
-#~ msgid "Status"
-#~ msgstr "Status"
-
-#~ msgctxt "IPTVnadogradjivacE2"
-#~ msgid "IPTVupdaterE2"
-#~ msgstr "IPTVnadogradjivacE2"
-
-#~ msgctxt "Napravi bouquet"
-#~ msgid "Make bouquet"
-#~ msgstr "Napravi bouquet"
-
-#~ msgctxt "EPG"
-#~ msgid "EPG"
-#~ msgstr "EPG"
-
-#~ msgctxt "Naziv bouqueta"
-#~ msgid "Bouquet name"
-#~ msgstr "Naziv bouqueta"
-
-#~ msgctxt "Kroz player"
-#~ msgid "Via Players"
-#~ msgstr "Kroz player"
-
-#~ msgctxt "Izravno"
-#~ msgid "Direct"
-#~ msgstr "Izravno"
-
-#~ msgctxt "IPTVnadogradnja"
-#~ msgid "IPTVupdate"
-#~ msgstr "IPTVnadogradnja"
-
-#~ msgctxt "Napravi m3u"
-#~ msgid "Make m3u"
-#~ msgstr "Napravi m3u"

@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: IPTVupdater\n"
+"Project-Id-Version: m7live\n"
 "POT-Creation-Date: 2021-02-26 21:19+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
@@ -44,39 +44,3 @@ msgstr "OK"
 #: plugin.py:353
 msgid " "
 msgstr ""
-
-#~ msgid "Via Players"
-#~ msgstr "Via Players"
-
-#~ msgid "Direct"
-#~ msgstr "Direct"
-
-#~ msgid "IPTVupdater"
-#~ msgstr "IPTVupdater"
-
-#~ msgid "Status"
-#~ msgstr "Stato"
-
-#~ msgid "IPTVupdaterE2"
-#~ msgstr "IPTVupdaterE2"
-
-#~ msgid "Make bouquet"
-#~ msgstr "Crea Bouquet"
-
-#~ msgid "EPG"
-#~ msgstr "EPG"
-
-#~ msgid "Bouquet name"
-#~ msgstr "Nome Bouquet"
-
-#~ msgid "IPTVupdate"
-#~ msgstr "IPTVupdate"
-
-#~ msgid "Make m3u"
-#~ msgstr "Crea M3U"
-
-#~ msgid "V. %s"
-#~ msgstr "V. %s"
-
-#~ msgid "Link Status"
-#~ msgstr "Link Status"
