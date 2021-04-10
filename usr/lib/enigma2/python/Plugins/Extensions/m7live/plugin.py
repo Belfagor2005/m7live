@@ -40,6 +40,7 @@ from os import environ as os_environ
 import gettext
 import os
 import sys
+import six
 # import urllib2, urllib
 import glob           
 from Screens.MessageBox import MessageBox
@@ -231,12 +232,12 @@ if sslverify:
 
 def getUrl(url):
     try:
-        if url.startswith("https") and sslverify:
+        if url.startswith(b"https") and sslverify:
             parsed_uri = urlparse(url)
             domain = parsed_uri.hostname
             sniFactory = SNIFactory(domain)
-        if PY3 == 3:
-            url = url.encode()
+
+        url = six.ensure_str(url)
 
         req = Request(url)
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0')
