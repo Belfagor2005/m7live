@@ -18,34 +18,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 date 04/02/2018
 """
-############################ 20181220 ###############################
-import json
-import base64
+############################ 20210404 ###############################
 # from Plugins.Extensions.m7live.Utils import *
-from datetime import datetime
-from enigma import getDesktop
-from enigma import *
-from Components.MenuList import MenuList
 from Components.Button import Button
+from Components.Language import language
+from Components.MenuList import MenuList
+from Components.MultiContent import MultiContentEntryText, MultiContentEntryPixmapAlphaTest
+from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
+from Screens.InfoBar import MoviePlayer, InfoBar
+from Screens.InfoBarGenerics import *
 from Screens.InfoBarGenerics import InfoBarSeek, InfoBarAudioSelection, InfoBarSubtitleSupport, InfoBarNotifications
 from Screens.InfoBarGenerics import InfoBarServiceNotifications, InfoBarMoviePlayerSummarySupport, InfoBarMenu
-from Components.MultiContent import MultiContentEntryText, MultiContentEntryPixmapAlphaTest
+from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
-from Screens.InfoBarGenerics import *
-from Screens.InfoBar import MoviePlayer, InfoBar
-from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
-from Components.Language import language
 from Tools.Directories import resolveFilename, SCOPE_PLUGINS, SCOPE_LANGUAGE
+from datetime import datetime
+from enigma import *
+from enigma import getDesktop
 from os import environ as os_environ
+import base64
 import gettext
+import glob
+import json
 import os
 import sys
-import six
-# import urllib2, urllib
-import glob           
-from Screens.MessageBox import MessageBox
-version = '1.2'
 
+version = '1.2'
 isDreamOS = False
 
 try:
@@ -54,21 +52,23 @@ try:
 except:
     isDreamOS = False
 
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    from urllib.request import urlopen, Request
-    from urllib.error import URLError, HTTPError
-    from urllib.parse import urlparse
-    from urllib.parse import urlencode, quote
-    from urllib.request import urlretrieve
-else:
-    from urllib2 import urlopen, Request
-    from urllib2 import URLError, HTTPError
-    from urlparse import urlparse
-    from urllib import urlencode, quote
-    from urllib import urlretrieve
-
+PY3 = sys.version_info.major >= 3
+print('Py3: ',PY3)
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.request import Request
+from six.moves.urllib.error import HTTPError, URLError
+from six.moves.urllib.request import urlretrieve    
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import parse_qs
+from six.moves.urllib.request import build_opener
+from six.moves.urllib.parse import quote_plus
+from six.moves.urllib.parse import unquote_plus
+from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import unquote
+from six.moves.urllib.parse import urlencode
+import six.moves.urllib.request
+import six.moves.urllib.parse
+import six.moves.urllib.error
 
 if sys.version_info >= (2, 7, 9):
     try:
@@ -82,7 +82,6 @@ def ssl_urlopen(url):
         return urlopen(url, context=sslContext)
     else:
         return urlopen(url)
-
 def checkStr(txt):
     if PY3:
         if type(txt) == type(bytes()):
@@ -105,21 +104,16 @@ def checkInternet():
     else:
         return True
 
-
-# BRAND = '/usr/lib/enigma2/python/boxbranding.so'
-# BRANDP = '/usr/lib/enigma2/python/Plugins/PLi/__init__.pyo'
-# BRANDPLI ='/usr/lib/enigma2/python/Tools/StbHardware.pyo'
 DESKHEIGHT = getDesktop(0).size().height()
 THISPLUG = '/usr/lib/enigma2/python/Plugins/Extensions/m7live'
 SKIN_PATH = THISPLUG
 HD = getDesktop(0).size()
 icon = 'icon.png'
-global hostC            
+global hostC
 c7 = 'aHR0cHM6Ly9mZWVkLmVudGVydGFpbm1lbnQudHYudGhlcGxhdGZvcm0uZXUvZi9QUjFHaEMvbWVkaWFzZXQtcHJvZC1hbGwtc3RhdGlvbnM='
 hostC = base64.b64decode(c7)
 desc_plugin = (_('..:: m7live by Lululla %s ::.. ' % version))
 name_plugin = (_('m7live'))
-
 
 if isDreamOS:
     icon = '/icon.png'
@@ -134,8 +128,6 @@ else:
     else:
         SKIN_PATH = THISPLUG + '/skin/hd'
         icon = SKIN_PATH + '/icon.png'
-
-
 
 PluginLanguageDomain = 'm7live'
 PluginLanguagePath = '/usr/lib/enigma2/python/Plugins/Extensions/m7live/locale'
@@ -214,11 +206,6 @@ except:
     sslverify = False
 
 if sslverify:
-    try:
-        from urlparse import urlparse
-    except:
-        from urllib.parse import urlparse
-
     class SNIFactory(ssl.ClientContextFactory):
         def __init__(self, hostname=None):
             self.hostname = hostname
@@ -229,16 +216,14 @@ if sslverify:
                 ClientTLSOptions(self.hostname, ctx)
             return ctx
 
-
 def getUrl(url):
     try:
-        if url.startswith(b"https") and sslverify:
+        if url.startswith("https") and sslverify:
             parsed_uri = urlparse(url)
             domain = parsed_uri.hostname
             sniFactory = SNIFactory(domain)
-
-        url = six.ensure_str(url)
-
+        if PY3 == 3:
+            url = url.encode()
         req = Request(url)
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0')
         response = urlopen(req)
@@ -445,6 +430,7 @@ class Videosm7(Screen):
             self.names.append(name)
             showlist(self.names, self['menu'])
 
+
     def okClicked(self):
         idx = self["menu"].getSelectionIndex()
         name = self.names[idx]
@@ -542,6 +528,7 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
         InfoBarBase.__init__(self, steal_current_service=True)
         TvInfoBarShowHide.__init__(self)
         InfoBarAudioSelection.__init__(self)
+        
         # self.__event_tracker = ServiceEventTracker(screen = self, eventmap =
             # {
                 # iPlayableService.evSeekableStatusChanged: self.__seekableStatusChanged,
@@ -595,6 +582,7 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
             self.hideTimer.callback.append(self.ok)        
         self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
         SREF = self.srefOld
+
         if '8088' in str(self.url):
             self.onLayoutFinish.append(self.slinkPlay)
         else:
@@ -655,8 +643,10 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
             sTagAudioCodec = currPlay.info().getInfoString(iServiceInformation.sTagAudioCodec)
             message = 'stitle:' + str(sTitle) + '\n' + 'sServiceref:' + str(sServiceref) + '\n' + 'sTagCodec:' + str(sTagCodec) + '\n' + 'sTagVideoCodec:' + str(sTagVideoCodec) + '\n' + 'sTagAudioCodec:' + str(sTagAudioCodec)
             self.session.open(MessageBox, message, MessageBox.TYPE_INFO)
+
         except:
             pass
+
         return
 
     def showIMDB(self):
@@ -674,6 +664,7 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
         else:
             text_clear = self.name
             self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+
 
     def slinkPlay(self, url):
         ref = str(url)
@@ -693,6 +684,16 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
         self.session.nav.stopService()
         self.session.nav.playService(sref)
         
+        
+    # def play(self):
+        # if self.state == self.STATE_PAUSED:
+            # if self.shown:
+                # self.__setHideTimer()   
+        # self.state = self.STATE_PLAYING
+        # self.session.nav.playService(self.service)
+        # if self.shown:
+            # self.__setHideTimer()
+
     def cicleStreamType(self):
         from itertools import cycle, islice
         self.servicetype = '4097'
@@ -724,6 +725,13 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
     def keyNumberGlobal(self, number):
         self['text'].number(number)
 
+    # def cancel(self):
+        # if os.path.exists('/tmp/hls.avi'):
+            # os.remove('/tmp/hls.avi')
+        # self.session.nav.stopService()
+        # self.session.nav.playService(srefInit)
+        # self.close()
+
     def cancel(self):
         if os.path.exists('/tmp/hls.avi'):
             os.remove('/tmp/hls.avi')
@@ -747,6 +755,15 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
             self.hideTimer_conn = self.hideTimer.timeout.connect(self.screen_timeout)
         except:
             self.hideTimer.callback.append(self.screen_timeout)  
+            
+
+    # def showInfobar(self):
+        # self.vlcservice.refresh()
+        # self.show()
+        # if self.state == self.STATE_PLAYING:
+            # self.__setHideTimer()
+        # else:
+            # pass
 
     def hideInfobar(self):
         self.hide()
@@ -778,12 +795,21 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
     def leavePlayer(self):
         self.close()
 
+
     def __onClose(self):
         self.session.nav.stopService()
 
     def __evEOF(self):
         print( "evEOF=%d" % iPlayableService.evEOF)
         self.leavePlayer()
+
+    # def __evEOF(self):
+        # print "evEOF=%d" % iPlayableService.evEOF
+        # print "Event EOF"
+        # self.handleLeave(config.plugins.dreamMediathek.general.on_movie_stop.value)
+
+    # def __setHideTimer(self):
+        # self.hidetimer.start(self.screen_timeout)
 
     def showInfobar(self):
         self.show()
@@ -803,6 +829,15 @@ class Playstream2(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifica
             self.stopCurrent()
         self.service = newservice
         self.openPlay()
+
+    # def play(self):
+        # if self.state == self.STATE_PAUSED:
+            # if self.shown:
+                # self.__setHideTimer()   
+        # self.state = self.STATE_PLAYING
+        # self.session.nav.playService(self.service)
+        # if self.shown:
+            # self.__setHideTimer()
 
     def stopCurrent(self):
         print("stopCurrent")
@@ -880,3 +915,4 @@ def main(session, **kwargs):
 
 def Plugins(**kwargs):
     return PluginDescriptor(name=name_plugin, description=desc_plugin, where=[PluginDescriptor.WHERE_EXTENSIONSMENU, PluginDescriptor.WHERE_PLUGINMENU], icon=icon, fnc=main)
+
