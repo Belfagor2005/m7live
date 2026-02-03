@@ -1,24 +1,44 @@
-# # -*- coding: utf-8 -*-
-# from Components.Language import language
-# from Tools.Directories import resolveFilename, SCOPE_PLUGINS, SCOPE_LANGUAGE
-# import os
-# from os import environ as os_environ
-# import gettext
-# PluginLanguageDomain = "IPTVupdater"
-# PluginLanguagePath = '/usr/lib/enigma2/python/Plugins/Extensions/IPTVupdater/locale'
+# -*- coding: utf-8 -*-
 
-# def localeInit():
-# lang = language.getLanguage()[:2]
-# os.environ['LANGUAGE'] = lang
-# gettext.bindtextdomain(PluginLanguageDomain, PluginLanguagePath)
-# gettext.bindtextdomain('enigma2', resolveFilename(SCOPE_LANGUAGE, ''))
+from __future__ import absolute_import
+
+__author__ = "Lululla"
+__email__ = "ekekaz@gmail.com"
+__copyright__ = "Copyright (c) 2024 Lululla"
+__license__ = "GPL-v2"
+__version__ = "1.0.0"
+
+import os
+import gettext
+
+from Components.Language import language
+from Tools.Directories import resolveFilename, SCOPE_PLUGINS
+
+PluginLanguageDomain = "m7live"
+PluginLanguagePath = "Extensions/m7live/locale"
+
+isDreambox = os.path.exists("/usr/bin/apt-get")
 
 
-# def _(txt):
-# t = gettext.dgettext(PluginLanguageDomain, txt)
-# if t == txt:
-# t = gettext.dgettext('enigma2', txt)
-# return t
+def localeInit():
+    if isDreambox:
+        lang = language.getLanguage()[:2]
+        os.environ["LANGUAGE"] = lang
+    if PluginLanguageDomain and PluginLanguagePath:
+        gettext.bindtextdomain(PluginLanguageDomain, resolveFilename(SCOPE_PLUGINS, PluginLanguagePath))
 
-# localeInit()
-# language.addCallback(localeInit)
+
+if isDreambox:
+    def _(txt):
+        return gettext.dgettext(PluginLanguageDomain, txt) if txt else ""
+else:
+    def _(txt):
+        translated = gettext.dgettext(PluginLanguageDomain, txt)
+        if translated:
+            return translated
+        else:
+            print("[%s] fallback to default translation for %s" % (PluginLanguageDomain, txt))
+            return gettext.gettext(txt)
+
+localeInit()
+language.addCallback(localeInit)

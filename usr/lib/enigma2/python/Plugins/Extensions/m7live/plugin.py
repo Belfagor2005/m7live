@@ -18,54 +18,58 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 date 04/02/2018
 """
-############################ 20210404 ###############################
-# from Plugins.Extensions.m7live.Utils import *
-from six.moves.urllib.request import urlretrieve
-import six.moves.urllib.error
-import six.moves.urllib.parse
-import six.moves.urllib.request
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.parse import unquote
-from six.moves.urllib.parse import quote
-from six.moves.urllib.parse import unquote_plus
-from six.moves.urllib.parse import quote_plus
-from six.moves.urllib.request import build_opener
-from six.moves.urllib.parse import parse_qs
-from six.moves.urllib.parse import urlparse
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.request import Request
-from six.moves.urllib.request import urlopen
-from Components.Button import Button
-from Components.Language import language
-from Components.MenuList import MenuList
-from Components.MultiContent import MultiContentEntryText, MultiContentEntryPixmapAlphaTest
-from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
-from Screens.InfoBar import MoviePlayer, InfoBar
-from Screens.InfoBarGenerics import *
-from Screens.InfoBarGenerics import InfoBarSeek, InfoBarAudioSelection, InfoBarSubtitleSupport, InfoBarNotifications
-from Screens.InfoBarGenerics import InfoBarServiceNotifications, InfoBarMoviePlayerSummarySupport, InfoBarMenu
-from Screens.MessageBox import MessageBox
-from Screens.Screen import Screen
-from Tools.Directories import resolveFilename, SCOPE_PLUGINS, SCOPE_LANGUAGE
-from datetime import datetime
-from enigma import *
-from enigma import getDesktop
-from os import environ as os_environ
+
 import base64
 import gettext
-import glob
 import json
 import os
 import sys
+import socket
+from os.path import exists as fileExists
+
+from six.moves.urllib.error import HTTPError, URLError
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.request import Request, urlopen
+from enigma import (
+    RT_HALIGN_LEFT,
+    RT_VALIGN_CENTER,
+    eListboxPythonMultiContent,
+    eServiceReference,
+    eTimer,
+    gFont,
+    getDesktop,
+    iPlayableService,
+    iServiceInformation,
+)
+from Components.ActionMap import ActionMap, NumberActionMap
+from Components.Button import Button
+from Components.config import config
+from Components.Label import Label
+from Components.Language import language
+from Components.MenuList import MenuList
+from Components.MultiContent import MultiContentEntryText
+from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
+from Screens.InfoBarGenerics import (
+    InfoBarAudioSelection,
+    InfoBarMenu,
+    InfoBarNotifications,
+    InfoBarSeek,
+)
+from Screens.MessageBox import MessageBox
+from Screens.Screen import Screen
+from Tools.Directories import SCOPE_LANGUAGE, resolveFilename
+
+
+from .Utils import getserviceinfo
+from . import _
 
 version = '1.2'
-isDreamOS = False
 
 try:
-    from enigma import eMediaDatabase
-    isDreamOS = True
-except BaseException:
-    isDreamOS = False
+    from Components.AVSwitch import AVSwitch
+except ImportError:
+    from Components.AVSwitch import eAVControl as AVSwitch
+
 
 PY3 = sys.version_info.major >= 3
 print('Py3: ', PY3)
@@ -120,7 +124,7 @@ hostC = base64.b64decode(c7)
 desc_plugin = (_('..:: m7live by Lululla %s ::.. ' % version))
 name_plugin = (_('m7live'))
 
-if isDreamOS:
+if not PY3:
     icon = '/icon.png'
     if HD.width() > 1280:
         SKIN_PATH = THISPLUG + '/skin/fhd'
@@ -178,17 +182,9 @@ class RSList(MenuList):
 
 def RSListEntry(download):
     res = [download]
-    white = 16777215
-    grey = 11776953
-    green = 3707926
-    black = 0
-    yellow = 15053379
-    blue = 11577
-    red = 15758933
     col = int('0xffffff', 16)
     colsel = int('0xf07655', 16)
     backcol = int('0x000000', 16)
-    backsel = int('0x000000', 16)
     if HD.width() > 1280:
         res.append(
             MultiContentEntryText(
@@ -293,11 +289,8 @@ class m7live(Screen):
         self.skin = f.read()
         f.close()
         self.list = []
-        # self['menu'] = List(self.list)
         self['menu'] = RSList([])
         self['info'] = Label()
-        # self['title'] = Button(desc_plugin)
-        # self['version'] = Label('V. %s' % version)
         self['info'].setText(name_plugin)
         self['actions'] = NumberActionMap(['WizardActions',
                                            'InputActions',
@@ -339,7 +332,6 @@ class m7live(Screen):
             return
         name = self.names[itype]
         name = name.replace(' ', '-')
-        url = self.urls[itype]
         if itype == 0:
             self.session.open(Videosm7, name)
 
@@ -359,19 +351,23 @@ class statusinfo(Screen):
         f.close()
         self.lines = lines
         self.list = []
-        # self['menu'] = List(self.list)
         self['menu'] = RSList([])
         self['info'] = Label()
         self['info'].setText(name_plugin)
-        # self['title'] = Button(desc_plugin)
-        # self['version'] = Label('V. %s' % version)
-        self['actions'] = NumberActionMap(['WizardActions',
-                                           'InputActions',
-                                           'ColorActions',
-                                           'DirectionActions'], {'ok': self.close,
-                                                                 'back': self.close,
-                                                                 'red': self.close,
-                                                                 'green': self.close}, -1)
+        self['actions'] = NumberActionMap(
+            [
+                'WizardActions',
+                'InputActions',
+                'ColorActions',
+                'DirectionActions'
+            ],
+            {
+                'ok': self.close,
+                'back': self.close,
+                'red': self.close,
+                'green': self.close
+            }, -1
+        )
         self['key_red'] = Button(_('Cancel'))
         self['key_green'] = Button(_('OK'))
         self['key_yellow'] = Button(_(' '))
@@ -399,43 +395,30 @@ class Videosm7(Screen):
         self.skin = f.read()
         f.close()
         self.list = []
-        # self['menu'] = List(self.list)
         self['menu'] = RSList([])
         self['info'] = Label()
         self['info'].setText(name_plugin)
-        # self['title'] = Button(desc_plugin)
-        # self['version'] = Label('V. %s' % version)
-        self['actions'] = NumberActionMap(['WizardActions',
-                                           'InputActions',
-                                           'ColorActions',
-                                           'DirectionActions'], {
-            'ok': self.okClicked,
-            'back': self.close,
-            'red': self.close,
-            'green': self.okClicked}, -1)
-        # 'yellow': self.bouquet,
-        # 'blue': self.close}, -1)
+        self['actions'] = NumberActionMap(
+            [
+                'WizardActions',
+                'InputActions',
+                'ColorActions',
+                'DirectionActions'
+            ],
+            {
+                'ok': self.okClicked,
+                'back': self.close,
+                'red': self.close,
+                'green': self.okClicked
+            }, -1
+        )
         self['key_red'] = Button(_('Cancel'))
         self['key_green'] = Button(_('Select'))
-        # self['key_yellow'] = Button(_('Make bouquet'))
-        # self['key_blue'] = Button(_('EPG'))
         self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
-        SREF = self.srefOld
         self.onLayoutFinish.append(self.search)
 
     def search(self):
         content = getUrl(hostC)
-        # print "content A =", content
-
-        # hostC = str(hostC)
-        # if hostC.startswith("https") and sslverify:
-        # parsed_uri = urlparse(hostC)
-        # domain = parsed_uri.hostname
-        # sniFactory = SNIFactory(domain)
-        # if PY3 == 3:
-        # hostC = hostC.encode()
-        # content = make_request(hostC)
-
         self.names = []
         self.urls = []
         d = json.loads(content)
@@ -467,7 +450,6 @@ class Videosm7(Screen):
         for name in self.names:
             url = self.urls[j]
             j = j + 1
-            pic = " "
             print("showContent name =", name)
             print("showContent url =", url)
         self.urls.append(url)
@@ -491,8 +473,7 @@ class TvInfoBarShowHide():
 
     def __init__(self):
         self["ShowHideActions"] = ActionMap(
-            ["InfobarShowHideActions"], {
-                "toggleShow": self.toggleShow, "hide": self.hide}, 0)
+            ["InfobarShowHideActions"], {"toggleShow": self.toggleShow, "hide": self.hide}, 0)
         self.__event_tracker = ServiceEventTracker(
             screen=self, eventmap={
                 iPlayableService.evStart: self.serviceStarted})
@@ -573,10 +554,8 @@ class Playstream2(
     screen_timeout = 5000
 
     def __init__(self, session, name, url):
-        global SREF
         Screen.__init__(self, session)
         self.skinName = 'MoviePlayer'
-        title = 'Play Stream'
         # self['list'] = MenuList([])
         InfoBarMenu.__init__(self)
         InfoBarNotifications.__init__(self)
@@ -598,37 +577,38 @@ class Playstream2(
             self.init_aspect = 0
 
         self.new_aspect = self.init_aspect
-        self['actions'] = ActionMap(['WizardActions',
-                                     'MoviePlayerActions',
-                                     'MovieSelectionActions',
-                                     'MediaPlayerActions',
-                                     'EPGSelectActions',
-                                     'MediaPlayerSeekActions',
-                                     'SetupActions',
-                                     'ColorActions',
-                                     'InfobarShowHideActions',
-                                     'InfobarActions',
-                                     'InfobarSeekActions'], {'leavePlayer': self.cancel,
-                                                             'epg': self.showIMDB,
-                                                             'info': self.showinfo,
-                                                             # 'info': self.cicleStreamType,
-                                                             'tv': self.cicleStreamType,
-                                                             'stop': self.leavePlayer,
-                                                             'cancel': self.cancel,
-                                                             'back': self.cancel}, -1)
+        self['actions'] = ActionMap(
+            [
+                'WizardActions',
+                'MoviePlayerActions',
+                'MovieSelectionActions',
+                'MediaPlayerActions',
+                'EPGSelectActions',
+                'MediaPlayerSeekActions',
+                'SetupActions',
+                'ColorActions',
+                'InfobarShowHideActions',
+                'InfobarActions',
+                'InfobarSeekActions'
+            ],
+            {
+                'leavePlayer': self.cancel,
+                'epg': self.showIMDB,
+                'info': self.showinfo,
+                'tv': self.cicleStreamType,
+                'stop': self.leavePlayer,
+                'cancel': self.cancel,
+                'back': self.cancel
+            }, -1
+        )
         self.allowPiP = False
         self.service = None
-        service = None
         InfoBarSeek.__init__(self, actionmap='InfobarSeekActions')
         self.icount = 0
-        # self.desc = desc
         self.pcip = 'None'
         self.url = url
         self.name = name
-        # self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
         self.state = self.STATE_PLAYING
-        # self.hidetimer = eTimer()
-        # self.hidetimer.timeout.get().append(self.ok)
         self.hideTimer = eTimer()
         self.hideTimer.start(5000, True)
         try:
@@ -636,7 +616,6 @@ class Playstream2(
         except BaseException:
             self.hideTimer.callback.append(self.ok)
         self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
-        SREF = self.srefOld
 
         if '8088' in str(self.url):
             self.onLayoutFinish.append(self.slinkPlay)
@@ -681,9 +660,8 @@ class Playstream2(
         self.setAspect(temp)
 
     def showinfo(self):
-        debug = True
         try:
-            servicename, serviceurl = getserviceinfo(sref)
+            servicename, serviceurl = getserviceinfo(self.srefOld)
             if servicename is not None:
                 sTitle = servicename
             else:
@@ -742,15 +720,6 @@ class Playstream2(
         self.session.nav.stopService()
         self.session.nav.playService(sref)
 
-    # def play(self):
-        # if self.state == self.STATE_PAUSED:
-        # if self.shown:
-        # self.__setHideTimer()
-        # self.state = self.STATE_PLAYING
-        # self.session.nav.playService(self.service)
-        # if self.shown:
-        # self.__setHideTimer()
-
     def cicleStreamType(self):
         from itertools import cycle, islice
         self.servicetype = '4097'
@@ -782,21 +751,11 @@ class Playstream2(
     def keyNumberGlobal(self, number):
         self['text'].number(number)
 
-    # def cancel(self):
-        # if os.path.exists('/tmp/hls.avi'):
-        # os.remove('/tmp/hls.avi')
-        # self.session.nav.stopService()
-        # self.session.nav.playService(srefInit)
-        # self.close()
-
     def cancel(self):
         if os.path.exists('/tmp/hls.avi'):
             os.remove('/tmp/hls.avi')
         self.session.nav.stopService()
         self.session.nav.playService(SREF)
-        if self.pcip != 'None':
-            url2 = 'http://' + self.pcip + ':8080/requests/status.xml?command=pl_stop'
-            resp = urlopen(url2)
         if not self.new_aspect == self.init_aspect:
             try:
                 self.setAspect(self.init_aspect)
@@ -813,14 +772,6 @@ class Playstream2(
                 self.screen_timeout)
         except BaseException:
             self.hideTimer.callback.append(self.screen_timeout)
-
-    # def showInfobar(self):
-        # self.vlcservice.refresh()
-        # self.show()
-        # if self.state == self.STATE_PLAYING:
-            # self.__setHideTimer()
-        # else:
-            # pass
 
     def hideInfobar(self):
         self.hide()
@@ -978,6 +929,7 @@ def main(session, **kwargs):
 
 
 def Plugins(**kwargs):
+    from Plugins.Plugin import PluginDescriptor
     return PluginDescriptor(
         name=name_plugin,
         description=desc_plugin,
