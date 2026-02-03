@@ -473,7 +473,8 @@ class TvInfoBarShowHide():
 
     def __init__(self):
         self["ShowHideActions"] = ActionMap(
-            ["InfobarShowHideActions"], {"toggleShow": self.toggleShow, "hide": self.hide}, 0)
+            ["InfobarShowHideActions"], {
+                "toggleShow": self.toggleShow, "hide": self.hide}, 0)
         self.__event_tracker = ServiceEventTracker(
             screen=self, eventmap={
                 iPlayableService.evStart: self.serviceStarted})
